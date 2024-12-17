@@ -1,104 +1,171 @@
 
-%%capture
-!pip install gradio pandas
-#@markdown APP2: Verb tense checking
+!pip install gradio gtts pandas
+
 import gradio as gr
 import pandas as pd
 import random
+import os
+import tempfile
+from gtts import gTTS
 
-# Load the CSV file from the provided URL
-csv_url = "https://raw.githubusercontent.com/MK316/241214/refs/heads/main/data/verb_sample.csv"
-df = pd.read_csv(csv_url)
+# Load the irregular verbs data
+data_url = "https://github.com/Hansukson/Application2/raw/main/irregular_verbs%20(1).csv"
+verbs_df = pd.read_csv(data_url)
 
-# Initialize state
-state = {"remaining_verbs": df.copy(), "score": 0, "trials": 0, "current_index": -1}
+# Extract verbs data into a dictionary
+verbs_data = verbs_df.set_index("present")[['past', 'p.p']].to_dict(orient="index")
 
-# Function to select a random verb
-def select_random_verb():
-    if state["remaining_verbs"].empty:
-        return "Completed"
-    state["current_index"] = random.randint(0, len(state["remaining_verbs"]) - 1)
-    selected_verb = state["remaining_verbs"].iloc[state["current_index"]]
-    return f"Verb: {selected_verb['Verb']}"
+# Correct Feedback List (unchanged)
+correct_feedback = [
+    "Correct! Fantastic job, {name}!",
+    "Correct! Excellent work, {name}!",
+    "Correct! You're doing great, {name}!",
+    "Correct! Keep it up, {name} – you're unstoppable!",
+    "Correct! Outstanding effort, {name}!",
+    "Correct! Brilliant work, {name} – you nailed it!",
+    "Correct! Amazing job, {name}! Keep shining!",
+    "Correct! You're crushing it, {name}! Well done!",
+    "Correct! Superb, {name}! You’re on fire!",
+    "Correct! Perfect answer, {name}! Keep going strong!"
+]
 
-# Function to check the user's classification and verb forms
-def check_answer(user_classification, user_forms):
-    if state["remaining_verbs"].empty:
-        return "All verbs have been answered correctly. Great job!", f"Score: {state['score']}/{state['trials']}"
+# Wrong Feedback List (unchanged)
+wrong_feedback = [
+    "Wrong! Nice try, {name}. The correct forms are: {correct_past}, {correct_pp}.",
+    "Wrong! Almost there, {name}. The correct answer is: {correct_past}, {correct_pp}.",
+    "Wrong! Don’t give up, {name}. The correct forms are: {correct_past}, {correct_pp}.",
+    "Wrong! Good effort, {name}. The correct answer is: {correct_past}, {correct_pp}.",
+    "Wrong! Mistakes happen, {name}. The correct forms are: {correct_past}, {correct_pp}.",
+]
 
-    index = state["current_index"]
-    if index == -1:
-        return "Please click 'Show the Verb' first.", f"Score: {state['score']}/{state['trials']}"
+# Final Encouragement Feedback - 더 따뜻하고 인간적인 응원 추가
+final_encouragement = [
+    "You’ve done so well today, {name}. I can truly see your effort. Keep learning and growing!",
+    "I’m really proud of you, {name}. You’re moving forward step by step, and that’s what matters.",
+    "You’ve made real progress, {name}! Remember, every new word is a step towards confidence.",
+    "That was great work, {name}! Don’t forget how far you’ve come. Keep believing in yourself!",
+    "Look at how much you’ve learned, {name}! I’m cheering you on every step of the way.",
+    "Your dedication shows, {name}. Keep this up, and you’ll be amazed at your own growth.",
+    "It’s wonderful to see you improve, {name}. Keep your spirits high and keep going!",
+    "You’re getting stronger with every try, {name}. Your hard work is truly inspiring!",
+    "Your commitment is shining through, {name}. Just keep at it, and you’ll do even better!",
+    "I know it’s not always easy, {name}, but your progress is real. Stay motivated and keep pushing forward!"
+]
 
-    verb_data = state["remaining_verbs"].iloc[index]
-    verb = verb_data['Verb']
-    past = verb_data['Past']
-    pp = verb_data['PP']
-    regularity = verb_data['Regularity']
+def tts_play(verb_forms):
+    tts_text = f"{verb_forms[0]}, {verb_forms[1]}, {verb_forms[2]}"
+    temp_audio_file = os.path.join(tempfile.gettempdir(), "verb_audio.mp3")
+    tts = gTTS(tts_text)
+    tts.save(temp_audio_file)
+    return temp_audio_file
 
-    # Update trials
-    state["trials"] += 1
+current_verb = ""
+correct_count = 0
+attempt_count = 0
 
-    # Parse the user input
-    user_parts = [part.strip().lower() for part in user_forms.split(",") if part.strip()]
-    if len(user_parts) != 2:
-        return "Please provide both Past and Past Participle transformations separated by a comma.", f"Score: {state['score']}/{state['trials']}"
+def start_game(name):
+    if name.strip() == "":
+        return "Please enter your name to proceed!", gr.update(visible=False)
+    return f"Welcome, {name}! Click 'SHOW ME A VERB' to begin.", gr.update(visible=True)
 
-    user_past, user_pp = user_parts
+def show_random_verb():
+    global current_verb
+    current_verb = random.choice(list(verbs_data.keys()))
+    return current_verb
 
-    # Check user's answers
-    regularity_correct = user_classification.lower() == regularity.lower()
-    past_correct = user_past == past.lower()
-    pp_correct = user_pp == pp.lower()
+def check_answer(name, user_past, user_past_participle):
+    global correct_count, attempt_count, current_verb
+    attempt_count += 1
 
-    if regularity_correct and past_correct and pp_correct:
-        state["score"] += 1
-        feedback = f"Correct! {verb} - Past: {past}, PP: {pp} - Regularity: {regularity}"
-        # Remove the verb from the remaining list
-        state["remaining_verbs"] = state["remaining_verbs"].drop(state["remaining_verbs"].index[index])
+    correct_past_str = verbs_data[current_verb]['past'].strip().lower()
+    correct_pp_str = verbs_data[current_verb]['p.p'].strip().lower()
+    correct_pp_list = [pp.strip() for pp in correct_pp_str.split('/')]
+
+    user_past = user_past.strip().lower()
+    user_past_participle = user_past_participle.strip().lower()
+
+    audio_file = tts_play([current_verb, correct_past_str, correct_pp_str])
+
+    if user_past == correct_past_str and user_past_participle in correct_pp_list:
+        correct_count += 1
+        feedback = random.choice(correct_feedback).format(name=name)
     else:
-        feedback = (
-            f"Incorrect. Correct: Regularity={regularity}, Past={past}, PP={pp}. "
-            f"You entered: Regularity={user_classification}, Past={user_past}, PP={user_pp}."
+        feedback = random.choice(wrong_feedback).format(name=name, correct_past=correct_past_str, correct_pp=correct_pp_str)
+
+    score = f"Your Score: {correct_count} / {attempt_count}"
+
+    recheck_msg = f"{current_verb} {correct_past_str} {correct_pp_str}"
+
+    return feedback, gr.update(value=recheck_msg, visible=True), score, audio_file, gr.update(visible=True), gr.update(visible=True)
+
+def final_feedback(name):
+    return f"### THE END\n{random.choice(final_encouragement).format(name=name)}"
+
+def reset_inputs():
+    return "", "", ""
+
+def verb_game():
+    with gr.Blocks() as app:
+        gr.Markdown("# VerbMaster: Learn Irregular Verbs! 🎯")
+        gr.Markdown("This app will help you learn irregular verbs.")
+
+        name_input = gr.Textbox(label="Your Name")
+        start_button = gr.Button("START")
+        welcome_output = gr.Markdown()
+
+        show_verb_button = gr.Button("SHOW ME A VERB", visible=False)
+
+        present_verb_output = gr.Textbox(label="Present Verb", interactive=False)
+        user_past_input = gr.Textbox(label="Enter Past Form")
+        user_pp_input = gr.Textbox(label="Enter Past Participle")
+
+        submit_button = gr.Button("SUBMIT", visible=False)
+        feedback_output = gr.Textbox(label="Feedback", interactive=False)
+        recheck_output = gr.Textbox(label="Recheck", interactive=False, visible=False)
+        score_output = gr.Textbox(label="Score", interactive=False)
+
+        audio_button = gr.Button("NOT SURE HOW TO SAY IT? HEAR IT HERE!", visible=False)
+        tts_output = gr.Audio(label="Audio Feedback", visible=False)
+
+        continue_button = gr.Button("IF YOU WANT TO CONTINUE, CLICK HERE!", visible=False)
+        end_button = gr.Button("IF YOU WANT TO END THIS APP, CLICK HERE!", visible=False)
+
+        final_feedback_output = gr.Markdown(visible=False)
+
+        # START 버튼 클릭 -> SHOW ME A VERB 활성화
+        start_button.click(start_game, inputs=name_input, outputs=[welcome_output, show_verb_button])
+
+        # SHOW ME A VERB 클릭 -> 동사 표시
+        show_verb_button.click(show_random_verb, outputs=present_verb_output)
+
+        # Past Participle 입력 시 Submit 버튼 표시
+        user_pp_input.change(
+            lambda val: gr.update(visible=True) if val.strip() else gr.update(visible=False),
+            inputs=user_pp_input,
+            outputs=submit_button
         )
 
-    if state["remaining_verbs"].empty:
-        return "Completed", f"Score: {state['score']}/{state['trials']}"
+        # SUBMIT 클릭 -> feedback, recheck, score, 오디오, 발음 버튼, continue, end 버튼
+        submit_button.click(
+            check_answer,
+            inputs=[name_input, user_past_input, user_pp_input],
+            outputs=[feedback_output, recheck_output, score_output, tts_output, audio_button, continue_button]
+        )
+        submit_button.click(lambda: gr.update(visible=True), outputs=end_button)
 
-    return feedback, f"Score: {state['score']}/{state['trials']}"
+        # 발음 버튼 클릭 -> 오디오 표시
+        audio_button.click(lambda: gr.update(visible=True), outputs=tts_output)
 
-# Gradio interface
-with gr.Blocks() as app:
-    gr.Markdown("### VerbMaster [Verb list](https://raw.githubusercontent.com/MK316/241214/refs/heads/main/data/verb_sample.csv)")
-    gr.Markdown("""
-1. Click the 'Show the Verb' button.
-2. Choose regular/irregular.
-3. Enter the past and past participle (comma-separated) (e.g., "liked, liked").
-4. Click the 'Submit' button.
-5. Check your score: Your score will be displayed at the bottom of the screen.
-6. Play again: To continue, click the 'Show the Verb' button and try another verb.
-""")
+        # Continue 버튼 -> 입력 리셋, 새로운 동사
+        continue_button.click(reset_inputs, outputs=[user_past_input, user_pp_input, feedback_output])
+        continue_button.click(show_random_verb, outputs=present_verb_output)
 
-    # Button to display a verb
-    show_button = gr.Button("Show the Verb")
-    verb_details = gr.Textbox(label="Verb Details", interactive=False)
+        # End 버튼 클릭 시 Final Feedback 표시
+        end_button.click(final_feedback, inputs=name_input, outputs=final_feedback_output)
+        end_button.click(lambda: gr.update(visible=True), outputs=final_feedback_output)
 
-    # Radio buttons for regularity question
-    options = gr.Radio(["Regular", "Irregular"], label="Is the verb regular or irregular?")
+    return app
 
-    # Input field for past and past participle transformations
-    transformation_input = gr.Textbox(label="Enter Past and Past Participle (comma-separated)")
-
-    # Submit button and feedback
-    submit_button = gr.Button("Submit")
-    feedback = gr.Textbox(label="Feedback", interactive=False)
-    score_display = gr.Textbox(label="Score/Trial", interactive=False)
-
-    # Button click actions
-    show_button.click(fn=select_random_verb, outputs=verb_details)
-    submit_button.click(
-        fn=check_answer, inputs=[options, transformation_input], outputs=[feedback, score_display]
-    )
-
-# Launch the app
+app = verb_game()
 app.launch()
+
