@@ -48,3 +48,5 @@ process 한글로 바꾸어 주기 (for students)
 틀린것은 다시 나온다 
 report에 percentage 나오게 설명 
 어느 정도되면 다음 단계로 갈 수 있도록 안내 
+
+speech note 활용해서 발음 듣고 speech note가 dictation 할 수 있는지 확인 
