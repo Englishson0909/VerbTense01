@@ -1,6 +1,4 @@
 
-!pip install gradio gtts pandas
-
 import gradio as gr
 import pandas as pd
 import random
