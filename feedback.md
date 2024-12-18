@@ -54,4 +54,4 @@ final project md 파일 mk316home.streamlit.app
 
 repository 정리 
 2024-2 readme file 
-설명 
+설명 repository - collaborator  MK316
