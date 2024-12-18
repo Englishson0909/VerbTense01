@@ -53,3 +53,5 @@ speech note 활용해서 발음 듣고 speech note가 dictation 할 수 있는�
 final project md 파일 mk316home.streamlit.app
 
 repository 정리 
+2024-2 readme file 
+설명 
