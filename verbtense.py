@@ -1,8 +1,6 @@
-
 import streamlit as st
 import pandas as pd
 import random
-import os
 import io
 from gtts import gTTS
 
@@ -58,7 +56,7 @@ def tts_play(verb_forms):
     bytes_io.seek(0)
     return bytes_io
 
-# 초기 상태 설정
+# Session state 초기화
 if 'name' not in st.session_state:
     st.session_state.name = ""
 if 'current_verb' not in st.session_state:
@@ -69,19 +67,15 @@ if 'attempt_count' not in st.session_state:
     st.session_state.attempt_count = 0
 if 'game_started' not in st.session_state:
     st.session_state.game_started = False
-if 'show_verb' not in st.session_state:
-    st.session_state.show_verb = False
-if 'show_result' not in st.session_state:
-    st.session_state.show_result = False
 if 'final_stage' not in st.session_state:
     st.session_state.final_stage = False
 
 st.title("VerbMaster: Learn Irregular Verbs! 🎯")
 st.write("This app will help you learn irregular verbs.")
 
-# 이름 입력 및 시작 버튼
-if not st.session_state.game_started:
-    st.session_state.name = st.text_input("Your Name")
+# 게임 시작 전 이름 입력
+if not st.session_state.game_started and not st.session_state.final_stage:
+    st.session_state.name = st.text_input("Your Name", value=st.session_state.name)
     if st.button("START"):
         if st.session_state.name.strip() == "":
             st.warning("Please enter your name to proceed!")
@@ -89,67 +83,61 @@ if not st.session_state.game_started:
             st.session_state.game_started = True
             st.success(f"Welcome, {st.session_state.name}! Click 'SHOW ME A VERB' to begin.")
 
-# SHOW ME A VERB 버튼
+# 동사 보여주기
 if st.session_state.game_started and not st.session_state.final_stage:
     if st.button("SHOW ME A VERB"):
         st.session_state.current_verb = random.choice(list(verbs_data.keys()))
-        st.session_state.show_verb = True
-        st.session_state.show_result = False
 
-# 동사 표시
-if st.session_state.show_verb and not st.session_state.final_stage:
-    st.write("Present Verb:", st.session_state.current_verb)
-    user_past = st.text_input("Enter Past Form", key='user_past')
-    user_pp = st.text_input("Enter Past Participle", key='user_pp')
+    if st.session_state.current_verb:
+        st.write("Present Verb:", st.session_state.current_verb)
+        user_past = st.text_input("Enter Past Form", key='user_past')
+        user_pp = st.text_input("Enter Past Participle", key='user_pp')
 
-    # 제출 버튼
-    if st.button("SUBMIT"):
-        st.session_state.attempt_count += 1
-        correct_past_str = verbs_data[st.session_state.current_verb]['past'].strip().lower()
-        correct_pp_str = verbs_data[st.session_state.current_verb]['p.p'].strip().lower()
-        correct_pp_list = [pp.strip() for pp in correct_pp_str.split('/')]
+        if st.button("SUBMIT"):
+            st.session_state.attempt_count += 1
+            correct_past_str = verbs_data[st.session_state.current_verb]['past'].strip().lower()
+            correct_pp_str = verbs_data[st.session_state.current_verb]['p.p'].strip().lower()
+            correct_pp_list = [pp.strip() for pp in correct_pp_str.split('/')]
 
-        upast = user_past.strip().lower()
-        upp = user_pp.strip().lower()
+            upast = user_past.strip().lower()
+            upp = user_pp.strip().lower()
 
-        audio_bytes = tts_play([st.session_state.current_verb, correct_past_str, correct_pp_str])
+            audio_bytes = tts_play([st.session_state.current_verb, correct_past_str, correct_pp_str])
 
-        if upast == correct_past_str and upp in correct_pp_list:
-            st.session_state.correct_count += 1
-            feedback = random.choice(correct_feedback).format(name=st.session_state.name)
-        else:
-            feedback = random.choice(wrong_feedback).format(
-                name=st.session_state.name,
-                correct_past=correct_past_str,
-                correct_pp=correct_pp_str
-            )
+            if upast == correct_past_str and upp in correct_pp_list:
+                st.session_state.correct_count += 1
+                feedback = random.choice(correct_feedback).format(name=st.session_state.name)
+            else:
+                feedback = random.choice(wrong_feedback).format(
+                    name=st.session_state.name,
+                    correct_past=correct_past_str,
+                    correct_pp=correct_pp_str
+                )
 
-        score = f"Your Score: {st.session_state.correct_count} / {st.session_state.attempt_count}"
+            score = f"Your Score: {st.session_state.correct_count} / {st.session_state.attempt_count}"
 
-        st.write("Feedback:", feedback)
-        st.write("Recheck:", f"{st.session_state.current_verb} {correct_past_str} {correct_pp_str}")
-        st.write(score)
-        st.audio(audio_bytes, format='audio/mp3')
-        
-        # 계속하기 및 끝내기 버튼 표시
-        if st.button("IF YOU WANT TO CONTINUE, CLICK HERE!"):
-            # 입력값 리셋
-            st.session_state.user_past = ""
-            st.session_state.user_pp = ""
-            # 새로운 동사 뽑기
-            st.session_state.current_verb = random.choice(list(verbs_data.keys()))
-            st.experimental_rerun()
+            st.write("Feedback:", feedback)
+            st.write("Recheck:", f"{st.session_state.current_verb} {correct_past_str} {correct_pp_str}")
+            st.write(score)
+            st.audio(audio_bytes, format='audio/mp3')
 
-        if st.button("IF YOU WANT TO END THIS APP, CLICK HERE!"):
-            st.session_state.final_stage = True
-            st.experimental_rerun()
+            # 계속하기 및 끝내기
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("IF YOU WANT TO CONTINUE, CLICK HERE!"):
+                    # 다음 동사 준비
+                    st.session_state.user_past = ""
+                    st.session_state.user_pp = ""
+                    st.session_state.current_verb = ""
+                    st.experimental_rerun()
 
-# 최종 피드백
+            with col2:
+                if st.button("IF YOU WANT TO END THIS APP, CLICK HERE!"):
+                    st.session_state.final_stage = True
+                    st.experimental_rerun()
+
+# 게임 종료 후 메시지
 if st.session_state.final_stage:
     st.markdown("### THE END")
     st.markdown(random.choice(final_encouragement).format(name=st.session_state.name))
-
-
-app = verb_game()
-app.launch()
 
