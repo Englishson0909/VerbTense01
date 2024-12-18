@@ -45,4 +45,6 @@ about: 만든 사람
 documentation: 어떤 단어/ 
 process/ 영어본으로 완성된것 (for teachers) 
 process 한글로 바꾸어 주기 (for students) 
-
+틀린것은 다시 나온다 
+report에 percentage 나오게 설명 
+어느 정도되면 다음 단계로 갈 수 있도록 안내 
