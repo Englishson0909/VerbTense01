@@ -1,9 +1,9 @@
 
-import gradio as gr
+import streamlit as st
 import pandas as pd
 import random
 import os
-import tempfile
+import io
 from gtts import gTTS
 
 # Load the irregular verbs data
@@ -13,7 +13,7 @@ verbs_df = pd.read_csv(data_url)
 # Extract verbs data into a dictionary
 verbs_data = verbs_df.set_index("present")[['past', 'p.p']].to_dict(orient="index")
 
-# Correct Feedback List (unchanged)
+# Correct Feedback List
 correct_feedback = [
     "Correct! Fantastic job, {name}!",
     "Correct! Excellent work, {name}!",
@@ -27,7 +27,7 @@ correct_feedback = [
     "Correct! Perfect answer, {name}! Keep going strong!"
 ]
 
-# Wrong Feedback List (unchanged)
+# Wrong Feedback List
 wrong_feedback = [
     "Wrong! Nice try, {name}. The correct forms are: {correct_past}, {correct_pp}.",
     "Wrong! Almost there, {name}. The correct answer is: {correct_past}, {correct_pp}.",
@@ -36,7 +36,7 @@ wrong_feedback = [
     "Wrong! Mistakes happen, {name}. The correct forms are: {correct_past}, {correct_pp}.",
 ]
 
-# Final Encouragement Feedback - 더 따뜻하고 인간적인 응원 추가
+# Final Encouragement
 final_encouragement = [
     "You’ve done so well today, {name}. I can truly see your effort. Keep learning and growing!",
     "I’m really proud of you, {name}. You’re moving forward step by step, and that’s what matters.",
@@ -52,117 +52,103 @@ final_encouragement = [
 
 def tts_play(verb_forms):
     tts_text = f"{verb_forms[0]}, {verb_forms[1]}, {verb_forms[2]}"
-    temp_audio_file = os.path.join(tempfile.gettempdir(), "verb_audio.mp3")
     tts = gTTS(tts_text)
-    tts.save(temp_audio_file)
-    return temp_audio_file
+    bytes_io = io.BytesIO()
+    tts.write_to_fp(bytes_io)
+    bytes_io.seek(0)
+    return bytes_io
 
-current_verb = ""
-correct_count = 0
-attempt_count = 0
+# 초기 상태 설정
+if 'name' not in st.session_state:
+    st.session_state.name = ""
+if 'current_verb' not in st.session_state:
+    st.session_state.current_verb = ""
+if 'correct_count' not in st.session_state:
+    st.session_state.correct_count = 0
+if 'attempt_count' not in st.session_state:
+    st.session_state.attempt_count = 0
+if 'game_started' not in st.session_state:
+    st.session_state.game_started = False
+if 'show_verb' not in st.session_state:
+    st.session_state.show_verb = False
+if 'show_result' not in st.session_state:
+    st.session_state.show_result = False
+if 'final_stage' not in st.session_state:
+    st.session_state.final_stage = False
 
-def start_game(name):
-    if name.strip() == "":
-        return "Please enter your name to proceed!", gr.update(visible=False)
-    return f"Welcome, {name}! Click 'SHOW ME A VERB' to begin.", gr.update(visible=True)
+st.title("VerbMaster: Learn Irregular Verbs! 🎯")
+st.write("This app will help you learn irregular verbs.")
 
-def show_random_verb():
-    global current_verb
-    current_verb = random.choice(list(verbs_data.keys()))
-    return current_verb
+# 이름 입력 및 시작 버튼
+if not st.session_state.game_started:
+    st.session_state.name = st.text_input("Your Name")
+    if st.button("START"):
+        if st.session_state.name.strip() == "":
+            st.warning("Please enter your name to proceed!")
+        else:
+            st.session_state.game_started = True
+            st.success(f"Welcome, {st.session_state.name}! Click 'SHOW ME A VERB' to begin.")
 
-def check_answer(name, user_past, user_past_participle):
-    global correct_count, attempt_count, current_verb
-    attempt_count += 1
+# SHOW ME A VERB 버튼
+if st.session_state.game_started and not st.session_state.final_stage:
+    if st.button("SHOW ME A VERB"):
+        st.session_state.current_verb = random.choice(list(verbs_data.keys()))
+        st.session_state.show_verb = True
+        st.session_state.show_result = False
 
-    correct_past_str = verbs_data[current_verb]['past'].strip().lower()
-    correct_pp_str = verbs_data[current_verb]['p.p'].strip().lower()
-    correct_pp_list = [pp.strip() for pp in correct_pp_str.split('/')]
+# 동사 표시
+if st.session_state.show_verb and not st.session_state.final_stage:
+    st.write("Present Verb:", st.session_state.current_verb)
+    user_past = st.text_input("Enter Past Form", key='user_past')
+    user_pp = st.text_input("Enter Past Participle", key='user_pp')
 
-    user_past = user_past.strip().lower()
-    user_past_participle = user_past_participle.strip().lower()
+    # 제출 버튼
+    if st.button("SUBMIT"):
+        st.session_state.attempt_count += 1
+        correct_past_str = verbs_data[st.session_state.current_verb]['past'].strip().lower()
+        correct_pp_str = verbs_data[st.session_state.current_verb]['p.p'].strip().lower()
+        correct_pp_list = [pp.strip() for pp in correct_pp_str.split('/')]
 
-    audio_file = tts_play([current_verb, correct_past_str, correct_pp_str])
+        upast = user_past.strip().lower()
+        upp = user_pp.strip().lower()
 
-    if user_past == correct_past_str and user_past_participle in correct_pp_list:
-        correct_count += 1
-        feedback = random.choice(correct_feedback).format(name=name)
-    else:
-        feedback = random.choice(wrong_feedback).format(name=name, correct_past=correct_past_str, correct_pp=correct_pp_str)
+        audio_bytes = tts_play([st.session_state.current_verb, correct_past_str, correct_pp_str])
 
-    score = f"Your Score: {correct_count} / {attempt_count}"
+        if upast == correct_past_str and upp in correct_pp_list:
+            st.session_state.correct_count += 1
+            feedback = random.choice(correct_feedback).format(name=st.session_state.name)
+        else:
+            feedback = random.choice(wrong_feedback).format(
+                name=st.session_state.name,
+                correct_past=correct_past_str,
+                correct_pp=correct_pp_str
+            )
 
-    recheck_msg = f"{current_verb} {correct_past_str} {correct_pp_str}"
+        score = f"Your Score: {st.session_state.correct_count} / {st.session_state.attempt_count}"
 
-    return feedback, gr.update(value=recheck_msg, visible=True), score, audio_file, gr.update(visible=True), gr.update(visible=True)
+        st.write("Feedback:", feedback)
+        st.write("Recheck:", f"{st.session_state.current_verb} {correct_past_str} {correct_pp_str}")
+        st.write(score)
+        st.audio(audio_bytes, format='audio/mp3')
+        
+        # 계속하기 및 끝내기 버튼 표시
+        if st.button("IF YOU WANT TO CONTINUE, CLICK HERE!"):
+            # 입력값 리셋
+            st.session_state.user_past = ""
+            st.session_state.user_pp = ""
+            # 새로운 동사 뽑기
+            st.session_state.current_verb = random.choice(list(verbs_data.keys()))
+            st.experimental_rerun()
 
-def final_feedback(name):
-    return f"### THE END\n{random.choice(final_encouragement).format(name=name)}"
+        if st.button("IF YOU WANT TO END THIS APP, CLICK HERE!"):
+            st.session_state.final_stage = True
+            st.experimental_rerun()
 
-def reset_inputs():
-    return "", "", ""
+# 최종 피드백
+if st.session_state.final_stage:
+    st.markdown("### THE END")
+    st.markdown(random.choice(final_encouragement).format(name=st.session_state.name))
 
-def verb_game():
-    with gr.Blocks() as app:
-        gr.Markdown("# VerbMaster: Learn Irregular Verbs! 🎯")
-        gr.Markdown("This app will help you learn irregular verbs.")
-
-        name_input = gr.Textbox(label="Your Name")
-        start_button = gr.Button("START")
-        welcome_output = gr.Markdown()
-
-        show_verb_button = gr.Button("SHOW ME A VERB", visible=False)
-
-        present_verb_output = gr.Textbox(label="Present Verb", interactive=False)
-        user_past_input = gr.Textbox(label="Enter Past Form")
-        user_pp_input = gr.Textbox(label="Enter Past Participle")
-
-        submit_button = gr.Button("SUBMIT", visible=False)
-        feedback_output = gr.Textbox(label="Feedback", interactive=False)
-        recheck_output = gr.Textbox(label="Recheck", interactive=False, visible=False)
-        score_output = gr.Textbox(label="Score", interactive=False)
-
-        audio_button = gr.Button("NOT SURE HOW TO SAY IT? HEAR IT HERE!", visible=False)
-        tts_output = gr.Audio(label="Audio Feedback", visible=False)
-
-        continue_button = gr.Button("IF YOU WANT TO CONTINUE, CLICK HERE!", visible=False)
-        end_button = gr.Button("IF YOU WANT TO END THIS APP, CLICK HERE!", visible=False)
-
-        final_feedback_output = gr.Markdown(visible=False)
-
-        # START 버튼 클릭 -> SHOW ME A VERB 활성화
-        start_button.click(start_game, inputs=name_input, outputs=[welcome_output, show_verb_button])
-
-        # SHOW ME A VERB 클릭 -> 동사 표시
-        show_verb_button.click(show_random_verb, outputs=present_verb_output)
-
-        # Past Participle 입력 시 Submit 버튼 표시
-        user_pp_input.change(
-            lambda val: gr.update(visible=True) if val.strip() else gr.update(visible=False),
-            inputs=user_pp_input,
-            outputs=submit_button
-        )
-
-        # SUBMIT 클릭 -> feedback, recheck, score, 오디오, 발음 버튼, continue, end 버튼
-        submit_button.click(
-            check_answer,
-            inputs=[name_input, user_past_input, user_pp_input],
-            outputs=[feedback_output, recheck_output, score_output, tts_output, audio_button, continue_button]
-        )
-        submit_button.click(lambda: gr.update(visible=True), outputs=end_button)
-
-        # 발음 버튼 클릭 -> 오디오 표시
-        audio_button.click(lambda: gr.update(visible=True), outputs=tts_output)
-
-        # Continue 버튼 -> 입력 리셋, 새로운 동사
-        continue_button.click(reset_inputs, outputs=[user_past_input, user_pp_input, feedback_output])
-        continue_button.click(show_random_verb, outputs=present_verb_output)
-
-        # End 버튼 클릭 시 Final Feedback 표시
-        end_button.click(final_feedback, inputs=name_input, outputs=final_feedback_output)
-        end_button.click(lambda: gr.update(visible=True), outputs=final_feedback_output)
-
-    return app
 
 app = verb_game()
 app.launch()
