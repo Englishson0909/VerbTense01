@@ -1,2 +1,2 @@
 import streamlit as st
-st.write ("Welcome to my clssroom")
+st.write ("Welcome to my classroom")
