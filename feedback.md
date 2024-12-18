@@ -41,4 +41,8 @@ multi-user 사용했을 때, user 별로 독립적으로 확인하기
 
 이름:
 레벨 선택: 
+about: 만든 사람
+documentation: 어떤 단어/ 
+process/ 영어본으로 완성된것 (for teachers) 
+process 한글로 바꾸어 주기 (for students) 
 
