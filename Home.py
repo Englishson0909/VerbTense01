@@ -14,6 +14,11 @@ st.write("""
     
     Finally, it boosts confidence and fosters collaboration and communication across diverse cultures.
     I look forward to guiding my students toward these goals, confident that each step forward prepares them for a brighter future.
+
+Key Features of the App:
+
+A brief list or overview of what users can do on the app (e.g., learning irregular verbs, mastering verb tenses, etc.).
+Example: "Here, you can practice irregular verbs, learn verb conjugations, and improve your English skills through engaging exercises."
     
     To have another language is to possess a second soul
 """)
