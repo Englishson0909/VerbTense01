@@ -3,7 +3,7 @@ st.title ("About Irregular Verbs-24")
 st.write (https://github.com/Englishson0909/VerbTense01/raw/main/depositphotos_196778222-stock-illustration-smiley-thumb-laik-cool-emoticon.jpg)
 ("This app will help you easily learn the three forms of verbs (present, past, and past participle)
 
-About This App
+# About This App #
 
 This app was created to help learners master the three forms of verbs (present, past, and past participle).
 By learning the three forms of verbs, it becomes easier to use the past tense verbs when writing sentences in the past tense. 
@@ -22,8 +22,15 @@ Passive Voice: "The book was read."
 5) Better Understanding of English Grammar: Learning these forms contributes to a stronger foundation in understanding English grammar rules and structures, which is essential for advanced language skills.
 
 
-Creator:
-The app was developed by Hansuk Son. 
+# Creator #
+The app was developed by Hansuk Son (englishson0909@gmail.com). 
 
-Verbs Included:
+# Verbs Included#
 This app contains 100 irregular verbs. These verbs are selected from the list of words provided by the Korean Institute for Curriculum and Evaluation (KICE), ensuring they are aligned with the national educational standards.")
+
+#How This App Helps#
+"This app is designed to help students practice essential English skills, like mastering verb conjugations, understanding past tenses, and building confidence in communication."
+
+
+"Feel free to reach out if you have any questions or want to explore more English learning resources!"
+
