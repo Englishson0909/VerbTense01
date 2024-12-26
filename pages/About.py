@@ -5,7 +5,6 @@ st.title("About Verb Master")
 
 st.markdown(
     """
-    <h1>Smiley Image Example</h1>
     <img src="https://github.com/Englishson0909/VerbTense01/raw/main/depositphotos_196778222-stock-illustration-smiley-thumb-laik-cool-emoticon.jpg" width="50"/>
        """,
     unsafe_allow_html=True
