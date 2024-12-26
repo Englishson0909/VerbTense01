@@ -41,11 +41,6 @@ By learning the three forms of verbs, it becomes easier to use the past tense ve
 
 ---
 
-### Creator
-The app was developed by Hansuk Son (englishson0909@gmail.com).
-
----
-
 ### Verbs Included
 This app contains 100 irregular verbs. These verbs are selected from the list of words provided by the Korean Institute for Curriculum and Evaluation (KICE), ensuring they are aligned with the national educational standards.
 
@@ -54,6 +49,9 @@ This app contains 100 irregular verbs. These verbs are selected from the list of
 ### How This App Helps
 This app is designed to help students practice essential English skills, like mastering verb conjugations, understanding past tenses, and building confidence in communication.
 
+
+### Creator
+The app was developed by Hansuk Son (englishson0909@gmail.com).
 Feel free to reach out if you have any questions or want to explore more English learning resources!
 """)
 
