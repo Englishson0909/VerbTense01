@@ -1,7 +1,7 @@
 import streamlit as st
 
 # Title of the page
-st.title("About Irregular Verbs-24")
+st.title("About Verb Master")
 
 # Display image
 st.image("https://github.com/Englishson0909/VerbTense01/raw/main/depositphotos_196778222-stock-illustration-smiley-thumb-laik-cool-emoticon.jpg")
@@ -18,7 +18,7 @@ st.write("""
 This app was created to help learners master the three forms of verbs (present, past, and past participle).
 By learning the three forms of verbs, it becomes easier to use the past tense verbs when writing sentences in the past tense.
 
-### Key Benefits:
+### Key Benefits of learning past, past participle of a verb:
 
 1. **Correct Verb Usage in Sentences**: Understanding these forms helps you construct grammatically correct sentences in the past tense. The past tense is used for actions that happened at a specific time in the past, and the past participle is used in perfect tenses, such as the present perfect or past perfect.
 
@@ -27,7 +27,7 @@ By learning the three forms of verbs, it becomes easier to use the past tense ve
 3. **Forming Complex Sentences**: Once you know the past participle, you can form perfect tenses (e.g., present perfect, past perfect) and passive voice constructions. For example:
    - Present Perfect: "I have eaten."
    - Past Perfect: "I had eaten."
-   - Passive Voice: "The book was read."
+   - Passive Voice: "The book was sold out."
 
 4. **Improved Communication**: Mastery of these forms allows you to express yourself more fluently and with more nuance, especially when describing actions that have occurred at different times or in various contexts.
 
