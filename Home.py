@@ -16,12 +16,6 @@ st.write("""  To have another language is to possess a second soul.
     - Finally, it boosts confidence and fosters collaboration and communication across diverse cultures.
     I look forward to guiding my students toward these goals, confident that each step forward prepares them for a brighter future.
 
-Key Features of the App:
-
-A brief list or overview of what users can do on the app (e.g., learning irregular verbs, mastering verb tenses, etc.).
-Example: "Here, you can practice irregular verbs, learn verb conjugations, and improve your English skills through engaging exercises."
-      """)
-
 
 
 # Display image
@@ -29,3 +23,12 @@ st.image("https://flexible.img.hani.co.kr/flexible/normal/970/582/imgdb/child/20
 st.write("""The three pine trees on Geogeum Island, planted over a hundred years ago, stand strong through changing tides, showing real perseverance.
 They stay firm even under the sea, reminding us that our hopes can remain steady.
 Learning a foreign language is like quietly getting through each day, and the calm beaches and camel-shaped shore remind us that our power to endure lies within.""")
+
+
+
+Key Features of the App:
+
+A brief list or overview of what users can do on the app (e.g., learning irregular verbs, mastering verb tenses, etc.).
+Example: "Here, you can practice irregular verbs, learn verb conjugations, and improve your English skills through engaging exercises."
+      """)
+
