@@ -13,7 +13,9 @@ st.image(
 st.write("""
 **"To have another language is to possess a second soul."**
 
-Welcome to my classroom! Hi, my name is Hansuk. Since 2004, I’ve been teaching English, and although there have been many challenges, I believe it’s crucial to keep moving forward and grow as an educator every day.
+Welcome to my classroom! Hi, my name is Hansuk. Since 2004, I’ve been teaching English, 
+and although there have been many challenges, I believe it’s crucial to keep moving forward 
+and grow as an educator every day.
 
 As an English teacher, I’d like to highlight some key goals for learning English:
 
@@ -24,7 +26,8 @@ Learning English as an EFL student can open up an entirely new world of possibil
 - It expands career options in the global job market.
 - Finally, it boosts confidence and fosters collaboration and communication across diverse cultures.
 
-I look forward to guiding my students toward these goals, confident that each step forward prepares them for a brighter future.
+I look forward to guiding my students toward these goals, 
+confident that each step forward prepares them for a brighter future.
 """)
 
 # 거금도 이미지
@@ -48,3 +51,7 @@ st.write("""
 - Learn **verb conjugations**.
 - Improve your **English skills** through engaging exercises.
 """)
+
+# 추가 버튼 예시
+if st.button("Start Practicing Now!"):
+    st.success("Here you could lead users to the actual practice page or functionality.")
