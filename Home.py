@@ -6,7 +6,7 @@ st.title("Hansuk's English Classroom")
 # 밝게 웃는 그림(스마일 이모티콘) 표시 (원하는 이미지 링크로 변경 가능)
 st.image(
     "https://github.com/Englishson0909/VerbTense01/raw/main/depositphotos_196778222-stock-illustration-smiley-thumb-laik-cool-emoticon.jpg", 
-    width=120
+    width=60
 )
 
 # 소개 및 설명
@@ -28,9 +28,7 @@ I look forward to guiding my students toward these goals, confident that each st
 """)
 
 # 거금도 이미지
-st.image(
-    "https://flexible.img.hani.co.kr/flexible/normal/970/582/imgdb/child/2024/1010/53_17285251176767_20241010501060.jpg"
-)
+st.image("https://flexible.img.hani.co.kr/flexible/normal/970/582/imgdb/child/2024/1010/53_17285251176767_20241010501060.jpg")
 
 # 거금도 소나무 세 그루 이야기
 st.write("""
