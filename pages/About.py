@@ -46,9 +46,10 @@ This app contains 100 irregular verbs. These verbs are selected from the list of
 
 ---
 
-### How This App Helps
+### How This App Helps learners
 This app is designed to help students practice essential English skills, like mastering verb conjugations, understanding past tenses, and building confidence in communication.
-
+Additionally, by **listening to the audio of each verb**, students can familiarize themselves with correct pronunciation, making it easier to remember and apply these words in real-life contexts. 
+Through interactive learning and repeated exposure, students not only improve their grammatical accuracy but also develop a stronger sense of language fluency. This holistic approach—combining reading, writing, listening, and speaking—allows for a more **well-rounded and engaging** English learning experience.
 
 ### Creator
 The app was developed by Hansuk Son (englishson0909@gmail.com).
