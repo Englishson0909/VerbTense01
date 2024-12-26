@@ -11,7 +11,7 @@
    - if the user want to know the pronunication, 'Not to sure how to say it? Hear it here'
    - After trying 10 times, you can decide whether to try 10 more trials (1 sets) or finish it. 
 
-5. How to use the scores or results in the app
+4. How to use the scores or results in the app
 - Identify Specific Errors: Focus on the verbs you got wrong, then practice them again to quickly correct misunderstandings.
 
 - Track Progress Over Time: Record your scores after each session to see whether your accuracy improves.
