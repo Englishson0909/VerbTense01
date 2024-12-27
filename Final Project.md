@@ -1,8 +1,11 @@
-1. Objectives
+1. Objectives:
+- This app helps learners practice English irregular verbs in a structured, interactive way.
+- It provides immediate feedback on each response and tracks overall performance.
+- Additionally, it offers audio pronunciation to enhance listening and speaking skills.
 
-2. Streamlit app (https://verbtense1.streamlit.app/)
+3. Streamlit app (https://verbtense1.streamlit.app/)
 
-3. How to use the app (The steps)
+4. How to use the app (The steps)
    - type the user's name
    - click the show me a verb
    - type the answer
@@ -11,7 +14,7 @@
    - if the user want to know the pronunication, 'Not to sure how to say it? Hear it here'
    - After trying 10 times, you can decide whether to try 10 more trials (1 sets) or finish it. 
 
-4. How to use the scores or results in the app
+5. How to use the scores or results in the app
 - Identify Specific Errors: Focus on the verbs you got wrong, then practice them again to quickly correct misunderstandings.
 
 - Track Progress Over Time: Record your scores after each session to see whether your accuracy improves.
