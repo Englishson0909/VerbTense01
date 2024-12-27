@@ -3,7 +3,8 @@
 - It provides immediate feedback on each response and tracks overall performance.
 - Additionally, it offers audio pronunciation to enhance listening and speaking skills.
 
-3. Streamlit app (https://verbtense1.streamlit.app/)
+2. Streamlit app (https://verbtense1.streamlit.app/)
+QR Codes
 
 4. How to use the app (The steps)
    - type the user's name
