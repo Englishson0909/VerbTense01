@@ -1,3 +1,6 @@
+pip install --upgrade streamlit gradio gTTS pandas
+streamlit run 05_app.py
+
 import streamlit as st
 import streamlit.components.v1 as components
 import gradio as gr
@@ -7,11 +10,15 @@ import os
 import tempfile
 from gtts import gTTS
 
-# ---------------- YOUR IRREGULAR VERB LOGIC ----------------
+###############################################################################
+# (1) 불규칙 동사 처리 로직
+###############################################################################
+# CSV에서 동사 목록 불러오기
 data_url = "https://github.com/Hansukson/Application2/raw/main/irregular_verbs%20(1).csv"
 verbs_df = pd.read_csv(data_url)
 verbs_data = verbs_df.set_index("present")[['past', 'p.p']].to_dict(orient="index")
 
+# 정오답 시 피드백 문구
 correct_feedback = [
     "Correct! Fantastic job, {name}!",
     "Correct! Excellent work, {name}!",
@@ -46,10 +53,10 @@ final_encouragement = [
     "I know it’s not always easy, {name}, but your progress is real. Stay motivated and keep pushing forward!"
 ]
 
+# 세트 및 전역 상태
 max_sets = 10
 limit_per_set = 10
 
-# Global state
 set_number = 1
 attempt_in_set = 0
 already_submitted = False
@@ -57,6 +64,7 @@ attempt_count = 0
 correct_count = 0
 current_verb = ""
 
+# 음성 TTS 파일 생성
 def tts_play(verb_forms):
     tts_text = f"{verb_forms[0]}, {verb_forms[1]}, {verb_forms[2]}"
     temp_audio_file = os.path.join(tempfile.gettempdir(), "verb_audio.mp3")
@@ -64,6 +72,7 @@ def tts_play(verb_forms):
     tts.save(temp_audio_file)
     return temp_audio_file
 
+# 진행 상황 표시 함수
 def explain_sets():
     tries_left_in_set = limit_per_set - attempt_in_set
     return (
@@ -72,22 +81,29 @@ def explain_sets():
         f"You have **{tries_left_in_set} tries left** in this set."
     )
 
+# START 버튼 눌렀을 때 호출
 def start_game(name):
-    if name.strip() == "":
+    if not name.strip():
         return "Please enter your name to proceed!", gr.update(visible=False), ""
-    msg = f"Welcome, {name}! Click 'SHOW ME A VERB' to begin.\n\n" + explain_sets()
+    msg = (
+        f"Welcome, {name}! Click 'SHOW ME A VERB' to begin.\n\n" 
+        + explain_sets()
+    )
     return msg, gr.update(visible=True), ""
 
+# 동사 보여주기
 def show_random_verb():
     global current_verb, already_submitted
     current_verb = random.choice(list(verbs_data.keys()))
     already_submitted = False
     return current_verb
 
+# 사용자가 past, p.p 입력 후 SUBMIT했을 때
 def check_answer(name, user_past, user_pp):
     global correct_count, attempt_count, current_verb
     global set_number, attempt_in_set, already_submitted
 
+    # 아직 제출 안 했다면 제출 처리
     if not already_submitted:
         attempt_count += 1
         attempt_in_set += 1
@@ -102,9 +118,10 @@ def check_answer(name, user_past, user_pp):
 
     audio_file = tts_play([current_verb, correct_past_str, correct_pp_str])
 
+    # 정답/오답 체크
     if upast == correct_past_str and upp in correct_pp_list:
-        feedback = random.choice(correct_feedback).format(name=name)
         correct_count += 1
+        feedback = random.choice(correct_feedback).format(name=name)
     else:
         feedback = random.choice(wrong_feedback).format(
             name=name,
@@ -112,13 +129,15 @@ def check_answer(name, user_past, user_pp):
             correct_pp=correct_pp_str
         )
 
-    percentage = (correct_count / attempt_count) * 100 if attempt_count > 0 else 0
+    percentage = (correct_count / attempt_count * 100) if attempt_count else 0
     score_str = f"Your Score: {correct_count} / {attempt_count} ({percentage:.1f}%)"
     recheck_msg = f"{current_verb} {correct_past_str} {correct_pp_str}"
 
+    # 세트 진행도
     if attempt_in_set >= limit_per_set:
+        # 세트 종료 시점
         if set_number < max_sets:
-            # Next set
+            # 다음 세트로 이동 가능
             return (
                 feedback,
                 gr.update(value=recheck_msg, visible=True),
@@ -130,7 +149,7 @@ def check_answer(name, user_past, user_pp):
                 explain_sets()
             )
         else:
-            # Finished all sets
+            # 마지막 세트까지 끝
             return (
                 feedback,
                 gr.update(value=recheck_msg, visible=True),
@@ -142,7 +161,7 @@ def check_answer(name, user_past, user_pp):
                 "**You have finished the 10th (final) set.**\n\n" + explain_sets()
             )
     else:
-        # Ongoing set
+        # 아직 세트 진행 중
         return (
             feedback,
             gr.update(value=recheck_msg, visible=True),
@@ -154,9 +173,11 @@ def check_answer(name, user_past, user_pp):
             explain_sets()
         )
 
+# Continue 버튼 클릭 시 필드 초기화
 def reset_inputs():
     return "", "", "", ""
 
+# Try One More Set 버튼 클릭 시 다음 세트
 def try_one_more_set():
     global set_number, attempt_in_set, already_submitted
     set_number += 1
@@ -165,13 +186,17 @@ def try_one_more_set():
     msg = f"**Now starting set {set_number}.**\n" + explain_sets()
     return msg, gr.update(visible=True), gr.update(visible=False)
 
+# End 버튼 클릭 시 마지막 격려
 def final_feedback(name):
     return f"### THE END\n\n{random.choice(final_encouragement).format(name=name)}"
 
 
-# ---------------- CREATE THE GRADIO BLOCKS ----------------
+###############################################################################
+# (2) Gradio 인터페이스 생성 함수
+###############################################################################
 def create_gradio_app():
     with gr.Blocks() as app:
+        # 제목/소개
         gr.Markdown("# VerbMaster: Learn Irregular Verbs! 🎯")
         gr.Markdown("This app will help you learn irregular verbs. We have **10 sets** total, each set has **10 tries**.")
 
@@ -179,39 +204,32 @@ def create_gradio_app():
         name_input = gr.Textbox(label="Your Name", placeholder="Enter your name here")
         start_button = gr.Button("START")
 
-        # 환영 메시지
         welcome_output = gr.Markdown()
-
-        # Show me a verb 버튼 (처음에는 숨김)
         show_verb_button = gr.Button("SHOW ME A VERB", visible=False)
-
-        # 현재 세트 상태 표시
         status_output = gr.Markdown()
 
-        # 동사, 유저 입력, 제출
+        # 동사 및 입력 폼
         present_verb_output = gr.Textbox(label="Present Verb", interactive=False)
         user_past_input = gr.Textbox(label="Enter Past Form")
         user_pp_input = gr.Textbox(label="Enter Past Participle")
         submit_button = gr.Button("SUBMIT", visible=False)
 
-        # 피드백 영역
+        # 피드백 및 점수
         feedback_output = gr.Textbox(label="Feedback", interactive=False)
         recheck_output = gr.Textbox(label="Recheck", interactive=False, visible=False)
         score_output = gr.Textbox(label="Score", interactive=False)
 
-        # 오디오
+        # 오디오 재생
         audio_button = gr.Button("NOT SURE HOW TO SAY IT? HEAR IT HERE!", visible=False)
         tts_output = gr.Audio(label="Audio Feedback", visible=False)
 
-        # Continue & Try One More Set
+        # 진행 제어 버튼
         continue_button = gr.Button("IF YOU WANT TO CONTINUE, CLICK HERE!", visible=False)
         one_more_set_button = gr.Button("TRY ONE MORE SET", visible=False)
-
-        # 제일 아래에 배치될 End 버튼
         end_button = gr.Button("IF YOU WANT TO END THIS APP, CLICK HERE!")
         final_feedback_output = gr.Markdown(visible=False)
 
-        # --- 기능 연결 ---
+        # --- 이벤트 연결 ---
         start_button.click(
             fn=start_game,
             inputs=name_input,
@@ -279,22 +297,31 @@ def create_gradio_app():
 
     return app
 
-# ---------------- STREAMLIT SECTION ----------------
-# Build your Gradio Blocks
-gradio_app = create_gradio_app()
 
-# Mount the Blocks app at any path ("/verb" in this example).
-# Then call .show("inline") to return HTML as a string
-embedded_html = gr.mount_gradio_app(gradio_app, path="/verb").show("inline")
-
+###############################################################################
+# (3) Streamlit 내에 Gradio 임베드
+###############################################################################
+# Streamlit 페이지 설정
 st.set_page_config(page_title="Irregular Verb Practice", layout="wide")
 st.title("Irregular Verb Practice in Streamlit + Gradio")
 st.write("Below is the embedded Gradio interface:")
 
-# Display that HTML in Streamlit
+# Gradio 앱 생성 (Blocks 반환)
+demo = create_gradio_app()
+
+# launch()로 HTML을 반환받아 임베드 (fallback 방식)
+# inline=True : HTML 문자열로 반환 / prevent_thread_lock=True : Streamlit과의 충돌 방지
+app_html = demo.launch(
+    inline=True,
+    prevent_thread_lock=True,
+    inbrowser=False,
+    show_error=True
+)
+
+# Streamlit에 해당 HTML 삽입
 components.html(
-    embedded_html,
-    height=2200,          # Adjust as needed
+    app_html,
+    height=2200,          # 필요에 따라 조절 가능
     scrolling=True,
-    unsafe_allow_html=True  # Usually needed to allow iframes/scripts
+    unsafe_allow_html=True # iframe 등을 허용하기 위해 필요
 )
