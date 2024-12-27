@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import gradio as gr
 import pandas as pd
 import random
@@ -6,6 +7,7 @@ import os
 import tempfile
 from gtts import gTTS
 
+# --------------- YOUR ORIGINAL LOGIC ---------------
 # ----- 데이터 불러오기 -----
 data_url = "https://github.com/Hansukson/Application2/raw/main/irregular_verbs%20(1).csv"
 verbs_df = pd.read_csv(data_url)
@@ -54,8 +56,8 @@ set_number = 1
 attempt_in_set = 0
 already_submitted = False
 
-attempt_count = 0   
-correct_count = 0   
+attempt_count = 0
+correct_count = 0
 current_verb = ""
 
 def tts_play(verb_forms):
@@ -177,7 +179,7 @@ def final_feedback(name):
     return f"### THE END\n\n{random.choice(final_encouragement).format(name=name)}"
 
 def create_gradio_app():
-    """Return the Gradio Blocks interface (but do NOT launch)."""
+    """Return the Gradio Blocks interface (without directly launching)."""
     with gr.Blocks() as app:
         gr.Markdown("# VerbMaster: Learn Irregular Verbs! 🎯")
         gr.Markdown("This app will help you learn irregular verbs. We have **10 sets** total, each set has **10 tries**.")
@@ -222,27 +224,27 @@ def create_gradio_app():
 
         # 1) START 버튼 -> 환영메시지, Show me a verb 버튼 표시
         start_button.click(
-            start_game,
+            fn=start_game,
             inputs=name_input,
             outputs=[welcome_output, show_verb_button, status_output]
         )
 
         # 2) Show me a verb -> 현재 동사 표시
         show_verb_button.click(
-            show_random_verb,
+            fn=show_random_verb,
             outputs=present_verb_output
         )
 
         # 3) Past Participle 입력 시 SUBMIT 버튼 보이기
         user_pp_input.change(
-            lambda val: gr.update(visible=True) if val.strip() else gr.update(visible=False),
+            fn=lambda val: gr.update(visible=True) if val.strip() else gr.update(visible=False),
             inputs=user_pp_input,
             outputs=submit_button
         )
 
         # 4) SUBMIT -> check_answer
         submit_button.click(
-            check_answer,
+            fn=check_answer,
             inputs=[name_input, user_past_input, user_pp_input],
             outputs=[
                 feedback_output,
@@ -258,69 +260,60 @@ def create_gradio_app():
 
         # 5) Audio 버튼 -> 오디오 영역 표시
         audio_button.click(
-            lambda: gr.update(visible=True),
+            fn=lambda: gr.update(visible=True),
             outputs=tts_output
         )
 
         # 6) Continue -> 입력값 초기화 & 새 동사
         continue_button.click(
-            reset_inputs,
+            fn=reset_inputs,
             outputs=[user_past_input, user_pp_input, feedback_output, recheck_output]
         )
         continue_button.click(
-            show_random_verb,
+            fn=show_random_verb,
             outputs=present_verb_output
         )
         continue_button.click(
-            lambda: explain_sets(),
+            fn=lambda: explain_sets(),
             outputs=status_output
         )
 
         # 7) Try One More Set -> 다음 세트로
         one_more_set_button.click(
-            try_one_more_set,
+            fn=try_one_more_set,
             outputs=[welcome_output, show_verb_button, one_more_set_button]
         )
 
-        # 8) End 버튼 (맨 아래) -> 최종 Encourage
+        # 8) End 버튼 -> 최종 Encourage
         end_button.click(
-            final_feedback,
+            fn=final_feedback,
             inputs=name_input,
             outputs=final_feedback_output
         )
         end_button.click(
-            lambda: gr.update(visible=True),
+            fn=lambda: gr.update(visible=True),
             outputs=final_feedback_output
         )
 
     return app
 
+# --------------- STREAMLIT EMBEDDING SECTION ---------------
+# 1) Build the Gradio Blocks
+gradio_app = create_gradio_app()
 
-# ================ STREAMLIT SECTION ================
-def main():
-    st.title("Gradio App inside Streamlit")
-    st.write("Below is your Gradio interface, embedded within Streamlit!")
+# 2) Launch Gradio in "inline" mode so we get HTML back
+app_html = gradio_app.launch(
+    inline=True,              # Return HTML instead of opening a new tab
+    prevent_thread_lock=True, # Prevent blocking the Streamlit thread
+    inbrowser=False,          # Don't open your browser automatically
+    show_error=True
+)
 
-    # 1) Create the Gradio Blocks app (but don't launch)
-    gradio_app = create_gradio_app()
-    
-    # 2) Run it in 'inline' mode so we get back HTML
-    #    and use prevent_thread_lock so it doesn't block Streamlit
-    gradio_app_html = gradio_app.run(
-        show_error=True,
-        inline=True,
-        prevent_thread_lock=True
-    )
-    
-    # 3) Embed that HTML into our Streamlit app
-    st.components.v1.html(
-        gradio_app_html,
-        height=1400,  # adjust as needed
-        scrolling=True
-    )
-
-if __name__ == "__main__":
-    main()
-if __name__ == "__main__":
-    app = create_gradio_app()
-    app.launch()  # normal Gradio usage
+# 3) Show the Gradio app inside Streamlit
+st.title("Irregular Verb Practice in Streamlit + Gradio")
+st.write("Below is the embedded Gradio interface:")
+components.html(
+    app_html,
+    height=2000,  # Adjust height as needed
+    scrolling=True
+)
