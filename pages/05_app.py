@@ -7,13 +7,11 @@ import os
 import tempfile
 from gtts import gTTS
 
-# --------------- YOUR ORIGINAL LOGIC ---------------
-# ----- 데이터 불러오기 -----
+# ---------------- YOUR IRREGULAR VERB LOGIC ----------------
 data_url = "https://github.com/Hansukson/Application2/raw/main/irregular_verbs%20(1).csv"
 verbs_df = pd.read_csv(data_url)
 verbs_data = verbs_df.set_index("present")[['past', 'p.p']].to_dict(orient="index")
 
-# ----- 피드백 문구들 -----
 correct_feedback = [
     "Correct! Fantastic job, {name}!",
     "Correct! Excellent work, {name}!",
@@ -48,14 +46,13 @@ final_encouragement = [
     "I know it’s not always easy, {name}, but your progress is real. Stay motivated and keep pushing forward!"
 ]
 
-# ----- 전역 상태 -----
 max_sets = 10
 limit_per_set = 10
 
+# Global state
 set_number = 1
 attempt_in_set = 0
 already_submitted = False
-
 attempt_count = 0
 correct_count = 0
 current_verb = ""
@@ -76,13 +73,9 @@ def explain_sets():
     )
 
 def start_game(name):
-    """START 버튼 클릭 시: 이름 확인 후, 환영 메시지 + Show me a verb 버튼 표시"""
     if name.strip() == "":
         return "Please enter your name to proceed!", gr.update(visible=False), ""
-    msg = (
-        f"Welcome, {name}! Click 'SHOW ME A VERB' to begin.\n\n" 
-        + explain_sets()
-    )
+    msg = f"Welcome, {name}! Click 'SHOW ME A VERB' to begin.\n\n" + explain_sets()
     return msg, gr.update(visible=True), ""
 
 def show_random_verb():
@@ -110,8 +103,8 @@ def check_answer(name, user_past, user_pp):
     audio_file = tts_play([current_verb, correct_past_str, correct_pp_str])
 
     if upast == correct_past_str and upp in correct_pp_list:
-        correct_count += 1
         feedback = random.choice(correct_feedback).format(name=name)
+        correct_count += 1
     else:
         feedback = random.choice(wrong_feedback).format(
             name=name,
@@ -119,16 +112,13 @@ def check_answer(name, user_past, user_pp):
             correct_pp=correct_pp_str
         )
 
-    percentage = 0
-    if attempt_count > 0:
-        percentage = (correct_count / attempt_count) * 100
+    percentage = (correct_count / attempt_count) * 100 if attempt_count > 0 else 0
     score_str = f"Your Score: {correct_count} / {attempt_count} ({percentage:.1f}%)"
-
     recheck_msg = f"{current_verb} {correct_past_str} {correct_pp_str}"
 
     if attempt_in_set >= limit_per_set:
         if set_number < max_sets:
-            # 한 세트 종료, 다음 세트로 넘어갈 옵션
+            # Next set
             return (
                 feedback,
                 gr.update(value=recheck_msg, visible=True),
@@ -140,7 +130,7 @@ def check_answer(name, user_past, user_pp):
                 explain_sets()
             )
         else:
-            # 마지막 세트 종료
+            # Finished all sets
             return (
                 feedback,
                 gr.update(value=recheck_msg, visible=True),
@@ -152,7 +142,7 @@ def check_answer(name, user_past, user_pp):
                 "**You have finished the 10th (final) set.**\n\n" + explain_sets()
             )
     else:
-        # 세트 아직 진행중
+        # Ongoing set
         return (
             feedback,
             gr.update(value=recheck_msg, visible=True),
@@ -172,14 +162,15 @@ def try_one_more_set():
     set_number += 1
     attempt_in_set = 0
     already_submitted = False
-    msg = (f"**Now starting set {set_number}.**\n" + explain_sets())
+    msg = f"**Now starting set {set_number}.**\n" + explain_sets()
     return msg, gr.update(visible=True), gr.update(visible=False)
 
 def final_feedback(name):
     return f"### THE END\n\n{random.choice(final_encouragement).format(name=name)}"
 
+
+# ---------------- CREATE THE GRADIO BLOCKS ----------------
 def create_gradio_app():
-    """Return the Gradio Blocks interface (without directly launching)."""
     with gr.Blocks() as app:
         gr.Markdown("# VerbMaster: Learn Irregular Verbs! 🎯")
         gr.Markdown("This app will help you learn irregular verbs. We have **10 sets** total, each set has **10 tries**.")
@@ -221,28 +212,23 @@ def create_gradio_app():
         final_feedback_output = gr.Markdown(visible=False)
 
         # --- 기능 연결 ---
-
-        # 1) START 버튼 -> 환영메시지, Show me a verb 버튼 표시
         start_button.click(
             fn=start_game,
             inputs=name_input,
             outputs=[welcome_output, show_verb_button, status_output]
         )
 
-        # 2) Show me a verb -> 현재 동사 표시
         show_verb_button.click(
             fn=show_random_verb,
             outputs=present_verb_output
         )
 
-        # 3) Past Participle 입력 시 SUBMIT 버튼 보이기
         user_pp_input.change(
             fn=lambda val: gr.update(visible=True) if val.strip() else gr.update(visible=False),
             inputs=user_pp_input,
             outputs=submit_button
         )
 
-        # 4) SUBMIT -> check_answer
         submit_button.click(
             fn=check_answer,
             inputs=[name_input, user_past_input, user_pp_input],
@@ -258,13 +244,11 @@ def create_gradio_app():
             ]
         )
 
-        # 5) Audio 버튼 -> 오디오 영역 표시
         audio_button.click(
             fn=lambda: gr.update(visible=True),
             outputs=tts_output
         )
 
-        # 6) Continue -> 입력값 초기화 & 새 동사
         continue_button.click(
             fn=reset_inputs,
             outputs=[user_past_input, user_pp_input, feedback_output, recheck_output]
@@ -278,13 +262,11 @@ def create_gradio_app():
             outputs=status_output
         )
 
-        # 7) Try One More Set -> 다음 세트로
         one_more_set_button.click(
             fn=try_one_more_set,
             outputs=[welcome_output, show_verb_button, one_more_set_button]
         )
 
-        # 8) End 버튼 -> 최종 Encourage
         end_button.click(
             fn=final_feedback,
             inputs=name_input,
@@ -297,23 +279,22 @@ def create_gradio_app():
 
     return app
 
-# --------------- STREAMLIT EMBEDDING SECTION ---------------
-# 1) Build the Gradio Blocks
+# ---------------- STREAMLIT SECTION ----------------
+# Build your Gradio Blocks
 gradio_app = create_gradio_app()
 
-# 2) Launch Gradio in "inline" mode so we get HTML back
-app_html = gradio_app.launch(
-    inline=True,              # Return HTML instead of opening a new tab
-    prevent_thread_lock=True, # Prevent blocking the Streamlit thread
-    inbrowser=False,          # Don't open your browser automatically
-    show_error=True
-)
+# Mount the Blocks app at any path ("/verb" in this example).
+# Then call .show("inline") to return HTML as a string
+embedded_html = gr.mount_gradio_app(gradio_app, path="/verb").show("inline")
 
-# 3) Show the Gradio app inside Streamlit
+st.set_page_config(page_title="Irregular Verb Practice", layout="wide")
 st.title("Irregular Verb Practice in Streamlit + Gradio")
 st.write("Below is the embedded Gradio interface:")
+
+# Display that HTML in Streamlit
 components.html(
-    app_html,
-    height=2000,  # Adjust height as needed
-    scrolling=True
+    embedded_html,
+    height=2200,          # Adjust as needed
+    scrolling=True,
+    unsafe_allow_html=True  # Usually needed to allow iframes/scripts
 )
