@@ -5,6 +5,7 @@
 
 2. Streamlit app (https://verbtense1.streamlit.app/)
 QR Codes
+**(:😥 MK316: You might not have set the app as public. I can't access the app. This should be resolved.)**
 
 4. How to use the app (The steps)
    - type the user's name
